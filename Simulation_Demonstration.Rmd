@@ -1,0 +1,633 @@
+---
+title: 'The C-statistic provides no information on the accuracy of program evaluations:
+  Simulation Code'
+author: "Andrew Wey"
+date: "Spring 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Setting up c_effect_est_params
+
+The primary function (sim_c_effect_iter_fun) for simulating one iteration requires c_effect_est_params to create a covariate distribution and survival times representative of deceased-donor kidney-alone model from the January 2018 program-specific reports.  We construct c_effect_est_params from files in gitlab; note that the variance parameters were estimated from patient-level data.
+
+
+### Importing variance components of the linear predictors
+
+```{r lp_var_components}
+
+lp_var_components <- read.csv("lp_component_var.csv",
+                              header = FALSE,
+                              stringsAsFactors = FALSE)
+
+```
+
+
+### Importing vector of program sizes
+
+```{r program_sizes}
+
+program_sizes <- read.csv("ctr_n_vec.csv",
+                          header = FALSE,
+                          stringsAsFactors = FALSE)
+
+```
+
+
+### Importing variance for program-level hazard ratios
+
+```{r program_var}
+
+program_var <- read.csv("program_var.csv",
+                        header = FALSE,
+                        stringsAsFactors = FALSE)
+
+```
+
+
+### Importing information on baseline hazard function
+
+```{r bl_hazard_info}
+
+bl_hazard_info <- read.csv("bl_hazard.csv",
+                           header = TRUE,
+                           stringsAsFactors = FALSE)
+
+```
+
+
+### Creating c_effect_est_params
+
+```{r create_c_effect_est_params}
+
+c_effect_est_params <- list(var_components = unlist(lp_var_components),
+                            program_size = unlist(program_sizes),
+                            program_var = unlist(program_var),
+                            baseline_hazard = bl_hazard_info)
+
+```
+
+
+
+
+## Run Simulations
+
+As a warning, the simulations will likely take several hours to complete.
+
+
+### Source necessary files
+
+```{r source_sim_files}
+
+library(survival)
+library(dplyr)
+
+source("sim_c_effect_iter_fun.R")
+source("gen_surv_time.R")
+
+```
+
+
+### Create directory for simulations
+
+Due to the relatively high computational resources, the simulations are saved to disk.
+
+
+```{r create_sim_dir}
+
+### This may create issues
+
+if(! dir.exists(file.path(getwd(), "/simulations"))){ dir.create(file.path(getwd(), "/simulations")) }
+
+```
+
+
+### Run and write simulation results
+
+```{r run_c_effect_sims}
+
+if(! file.exists("simulations/c_effect_lp_8_ctrvar_1.5_confound_third.Rdata")){
+
+  c_effect_lp_0.5_ctrvar_1 <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 0.5, 1) })
+  c_effect_lp_1_ctrvar_1   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 1, 1) })
+  c_effect_lp_2_ctrvar_1   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 2, 1) })
+  c_effect_lp_4_ctrvar_1   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 4, 1) })
+  c_effect_lp_8_ctrvar_1   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 8, 1) })
+
+  save(c_effect_lp_0.5_ctrvar_1, file = "simulations/c_effect_lp_0.5_ctrvar_1.Rdata")
+  save(c_effect_lp_1_ctrvar_1, file = "simulations/c_effect_lp_1_ctrvar_1.Rdata")
+  save(c_effect_lp_2_ctrvar_1, file = "simulations/c_effect_lp_2_ctrvar_1.Rdata")
+  save(c_effect_lp_4_ctrvar_1, file = "simulations/c_effect_lp_4_ctrvar_1.Rdata")
+  save(c_effect_lp_8_ctrvar_1, file = "simulations/c_effect_lp_8_ctrvar_1.Rdata")
+
+  
+  
+  c_effect_lp_0.5_ctrvar_1.5_confound_third <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 0.5, 1.5, 1/3) })
+  c_effect_lp_1_ctrvar_1.5_confound_third   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 1, 1.5, 1/3) })
+  c_effect_lp_2_ctrvar_1.5_confound_third   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 2, 1.5, 1/3) })
+  c_effect_lp_4_ctrvar_1.5_confound_third   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 4, 1.5, 1/3) })
+  c_effect_lp_8_ctrvar_1.5_confound_third   <- sapply(1:1000, function(x){ sim_c_effect_iter_fun(x, 8, 1.5, 1/3) })
+
+  save(c_effect_lp_0.5_ctrvar_1.5_confound_third, file = "simulations/c_effect_lp_0.5_ctrvar_1.5_confound_third.Rdata")
+  save(c_effect_lp_1_ctrvar_1.5_confound_third, file = "simulations/c_effect_lp_1_ctrvar_1.5_confound_third.Rdata")
+  save(c_effect_lp_2_ctrvar_1.5_confound_third, file = "simulations/c_effect_lp_2_ctrvar_1.5_confound_third.Rdata")
+  save(c_effect_lp_4_ctrvar_1.5_confound_third, file = "simulations/c_effect_lp_4_ctrvar_1.5_confound_third.Rdata")
+  save(c_effect_lp_8_ctrvar_1.5_confound_third, file = "simulations/c_effect_lp_8_ctrvar_1.5_confound_third.Rdata")
+}
+
+```
+
+
+
+## Summarize simulation results
+
+### Import simulation results and average over the iterations
+
+```{r summarize_c_effect_sims}
+
+
+ctrvar_1_results          <- NULL
+ctrvar_1_confound_results <- NULL
+
+
+pxvar <- c(0.5, 1, 2, 4, 8)
+
+
+for(i in pxvar){
+  
+  ### Load and bind the ctrvar 1 component
+  load(file = file.path("simulations", 
+                        paste0("c_effect_lp_", 
+                               i,
+                               "_ctrvar_1.Rdata")))
+  
+  ctrvar_1_results <- rbind(ctrvar_1_results,
+                            apply(get(paste0("c_effect_lp_", 
+                                             i,
+                                             "_ctrvar_1")),
+                                  1, 
+                                  mean,
+                                  na.rm = TRUE))
+  
+  
+  
+  ### Load and bind the ctrvar 1 component with unmeasured confounding
+  load(file = file.path("simulations", 
+                        paste0("c_effect_lp_", 
+                               i,
+                               "_ctrvar_1.5_confound_third.Rdata")))
+  
+  ctrvar_1_confound_results <- rbind(ctrvar_1_confound_results,
+                                     apply(get(paste0("c_effect_lp_", 
+                                                      i,
+                                                      "_ctrvar_1.5_confound_third")),
+                                           1, 
+                                           mean,
+                                           na.rm = TRUE))
+}
+
+```
+
+
+
+### Create objects to more easily summarize results
+
+```{r create_summary_objs}
+
+empirical_c_stats <- cbind(ctrvar_1_results[,1],
+                           ctrvar_1_confound_results[,1])
+
+
+empirical_expected <- cbind(ctrvar_1_results[,2],
+                            ctrvar_1_confound_results[,2])
+
+
+empirical_1yr_surv <- cbind(ctrvar_1_results[,3],
+                            ctrvar_1_confound_results[,3])
+
+
+surv_0.75_qnt <- cbind(ctrvar_1_results[,4],
+                       ctrvar_1_confound_results[,4])
+
+
+surv_0.90_qnt <- cbind(ctrvar_1_results[,5],
+                       ctrvar_1_confound_results[,5])
+
+
+surv_0.95_qnt <- cbind(ctrvar_1_results[,6],
+                       ctrvar_1_confound_results[,6])
+
+
+surv_0.99_qnt <- cbind(ctrvar_1_results[,7],
+                       ctrvar_1_confound_results[,7])
+
+
+shr_exp_1   <- ctrvar_1_results[, 2:4 * 13 - 5]
+shr_mse_1   <- ctrvar_1_results[, 2:4 * 13 - 1]
+shr_5tier_1 <- ctrvar_1_results[, 2:4 * 13 + 3]
+shr_cms_1   <- ctrvar_1_results[, 2:4 * 13 + 6]
+shr_mpsc_1  <- ctrvar_1_results[, 2:4 * 13 + 7]
+
+
+shr_exp_1_confound   <- ctrvar_1_confound_results[, 2:4 * 13 - 5]
+shr_mse_1_confound   <- ctrvar_1_confound_results[, 2:4 * 13 - 1]
+shr_5tier_1_confound <- ctrvar_1_confound_results[, 2:4 * 13 + 3]
+shr_cms_1_confound   <- ctrvar_1_confound_results[, 2:4 * 13 + 6]
+shr_mpsc_1_confound  <- ctrvar_1_confound_results[, 2:4 * 13 + 7]
+
+```
+
+
+
+### Summary statistics (Table 2)
+
+
+```{r ctrvar_1_characteristics}
+
+
+desc_table <- cbind(empirical_c_stats[,1],
+                    empirical_expected[,1],
+                    empirical_1yr_surv[,1],
+                    surv_0.75_qnt[,1],
+                    surv_0.90_qnt[,1],
+                    surv_0.95_qnt[,1],
+                    surv_0.99_qnt[,1])
+
+
+desc_table_nice <- cbind(format(round(desc_table[,1], 2), nsmall = 2),
+                         round(desc_table[,2]),
+                         paste0(format(round(100 * desc_table[,3], 1), nsmall = 1), "%"),
+                         paste0(format(round(100 * desc_table[,4], 1), nsmall = 1), "%"),
+                         paste0(format(round(100 * desc_table[,5], 1), nsmall = 1), "%"),
+                         paste0(format(round(100 * desc_table[,6], 1), nsmall = 1), "%"),
+                         paste0(format(round(100 * desc_table[,7], 1), nsmall = 1), "%"))
+
+
+dimnames(desc_table_nice) <- list(NULL,
+                                  c("C-Statistic",
+                                    "Expected Events",
+                                    "Observed",
+                                    paste0(c(75, 90, 95, 99),
+                                           "th percentile")))
+
+
+print(desc_table_nice)
+
+
+```
+
+
+
+
+
+
+### Comparison without and with unadjusted risks (Table 3)
+
+
+```{r unadj_risk_comparison}
+
+
+unadj_risks_table <- cbind(empirical_c_stats,
+                           empirical_expected,
+                           empirical_1yr_surv)
+
+
+
+unadj_risks_table_nice <- cbind(format(round(unadj_risks_table[,1], 2), nsmall = 2),
+                                format(round(unadj_risks_table[,2], 2), nsmall = 2),
+                                round(unadj_risks_table[,3]),
+                                round(unadj_risks_table[,4]),
+                                paste0(format(round(100 * unadj_risks_table[,5], 1), nsmall = 1), "%"),
+                                paste0(format(round(100 * unadj_risks_table[,6], 1), nsmall = 1), "%"))
+
+
+
+
+dimnames(unadj_risks_table_nice) <- list(NULL,
+                                         paste0(rep(c("C-statistic",
+                                                     "Expected",
+                                                     "1-year survival"), 
+                                                    each = 2),
+                                                ": ",
+                                               rep(c("Without",
+                                                     "With"),
+                                                   3)))
+
+print(unadj_risks_table_nice)
+
+
+```
+
+
+
+
+## Mean-squared error (Figure 1)
+
+```{r MSE_figure}
+
+
+par(
+  bty = 'n')
+
+par(mfrow = c(1,2))
+
+
+plot(shr_mse_1[,1] ~ empirical_c_stats[,1],
+     xlab = "C-statistic",
+     ylab = "Mean-Squared Error (MSE)",
+     ylim = c(0, 0.20),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+mtext("No unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_mse_1[,2] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_mse_1[,3] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+
+
+
+
+
+plot(shr_mse_1_confound[,1] ~ empirical_c_stats[,2],
+     xlab = "C-statistic",
+     ylab = "Mean-Squared Error (MSE)",
+     ylim = c(0, 0.20),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+mtext("Unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_mse_1_confound[,2] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_mse_1_confound[,3] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+legend("bottomleft",
+       c("<3",
+         "3-<10",
+         expression("" >= "10")),
+       lty = c(1, 2, 5),
+       pch = c(6, 2, 5),
+       lwd = c(2, 2, 2),
+       bty = "n",
+       title = "Expected Events")
+
+
+```
+
+
+## Five-tier (Figure 2)
+
+
+```{r fivetier_figure}
+
+
+par(
+  bty = 'n')
+
+par(mfrow = c(1,2))
+
+
+plot(shr_5tier_1[,1] ~ empirical_c_stats[,1],
+     xlab = "C-statistic",
+     ylab = "Correlation",
+     ylim = c(-1, 0),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+mtext("No unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_5tier_1[,2] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_5tier_1[,3] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+
+
+
+
+
+plot(shr_5tier_1_confound[,1] ~ empirical_c_stats[,2],
+     xlab = "C-statistic",
+     ylab = "Correlation",
+     ylim = c(-1, 0),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+mtext("Unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_5tier_1_confound[,2] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_5tier_1_confound[,3] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+legend("bottomleft",
+       c("<3",
+         "3-<10",
+         expression("" >= "10")),
+       lty = c(1, 2, 5),
+       pch = c(6, 2, 5),
+       lwd = c(2, 2, 2),
+       bty = "n",
+       title = "Expected Events")
+
+
+```
+
+
+
+## Flag-Status (Figure 3)
+
+
+```{r flagstatus_figure}
+
+
+par(
+  bty = 'n')
+
+par(mfrow = c(2,2))
+
+
+plot(shr_cms_1[,1] ~ empirical_c_stats[,1],
+     xlab = "C-statistic",
+     ylab = "Probability",
+     ylim = c(0.5, 1),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+title(main = "CMS Flag Status",
+      line = 3)
+mtext("No unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_cms_1[,2] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_cms_1[,3] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+
+
+
+
+
+plot(shr_cms_1_confound[,1] ~ empirical_c_stats[,2],
+     xlab = "C-statistic",
+     ylab = "Probability",
+     ylim = c(0.5, 1),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+title(main = "CMS Flag Status",
+      line = 3)
+mtext("Unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_cms_1_confound[,2] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_cms_1_confound[,3] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+legend("bottomleft",
+       c("<3",
+         "3-<10",
+         expression("" >= "10")),
+       lty = c(1, 2, 5),
+       pch = c(6, 2, 5),
+       lwd = c(2, 2, 2),
+       bty = "n",
+       title = "Expected Events")
+
+
+
+
+
+plot(shr_mpsc_1[,1] ~ empirical_c_stats[,1],
+     xlab = "C-statistic",
+     ylab = "Probability",
+     ylim = c(0.5, 1.0),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+title(main = "MPSC Flag Status",
+      line = 3)
+mtext("No unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_mpsc_1[,2] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_mpsc_1[,3] ~ empirical_c_stats[,1],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+
+
+
+
+
+plot(shr_mpsc_1_confound[,1] ~ empirical_c_stats[,2],
+     xlab = "C-statistic",
+     ylab = "Probability",
+     ylim = c(0.5, 1.0),
+     xlim = c(0.5, 1.0),
+     type = "b",
+     pch = 6,
+     lwd = 2,
+     main = "")
+title(main = "MPSC Flag Status",
+      line = 3)
+mtext("Unadjusted risk factors",
+      side = 3,
+      line = 1)
+lines(shr_mpsc_1_confound[,2] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 2,
+      lty = 2,
+      lwd = 2)
+lines(shr_mpsc_1_confound[,3] ~ empirical_c_stats[,2],
+      type = "b",
+      pch = 5,
+      lty = 5,
+      lwd = 2)
+legend("bottomleft",
+       c("<3",
+         "3-<10",
+         expression("" >= "10")),
+       lty = c(1, 2, 5),
+       pch = c(6, 2, 5),
+       lwd = c(2, 2, 2),
+       bty = "n",
+       title = "Expected Events")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
