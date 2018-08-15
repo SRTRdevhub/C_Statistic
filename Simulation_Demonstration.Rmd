@@ -259,7 +259,7 @@ shr_mpsc_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 7]
 
 
 
-### Summary statistics (Table 2)
+### Summary statistics (Table 1)
 
 
 ```{r ctrvar_1_characteristics}
@@ -301,7 +301,7 @@ print(desc_table_nice)
 
 
 
-### Comparison without and with unadjusted risks (Table 3)
+### Comparison without and with unadjusted risks (Table 2)
 
 
 ```{r unadj_risk_comparison}
