@@ -226,18 +226,34 @@ surv_0.99_qnt <- cbind(ctrvar_1_results[,7],
                        ctrvar_1_confound_results[,7])
 
 
-shr_exp_1   <- ctrvar_1_results[, 2:4 * 13 - 5]
-shr_mse_1   <- ctrvar_1_results[, 2:4 * 13 - 1]
-shr_5tier_1 <- ctrvar_1_results[, 2:4 * 13 + 3]
-shr_cms_1   <- ctrvar_1_results[, 2:4 * 13 + 6]
-shr_mpsc_1  <- ctrvar_1_results[, 2:4 * 13 + 7]
+shr_exp_1   <- ctrvar_1_results[, 2:4 * 19 - 11]
+shr_bias_1  <- ctrvar_1_results[, 2:4 * 19 - 8]
+shr_mse_1   <- ctrvar_1_results[, 2:4 * 19 - 6]
+shr_shr_1   <- ctrvar_1_results[, 2:4 * 19 - 4]
+shr_5tier_1 <- ctrvar_1_results[, 2:4 * 19 - 2]
+shr_HRt1_1  <- ctrvar_1_results[, 2:4 * 19 + 1]
+shr_HRt2_1  <- ctrvar_1_results[, 2:4 * 19 + 2]
+shr_HRt3_1  <- ctrvar_1_results[, 2:4 * 19 + 3]
+shr_HRt4_1  <- ctrvar_1_results[, 2:4 * 19 + 4]
+shr_HRt5_1  <- ctrvar_1_results[, 2:4 * 19 + 5]
+shr_cms_1   <- ctrvar_1_results[, 2:4 * 19 + 6]
+shr_mpsc_1  <- ctrvar_1_results[, 2:4 * 19 + 7]
 
 
-shr_exp_1_confound   <- ctrvar_1_confound_results[, 2:4 * 13 - 5]
-shr_mse_1_confound   <- ctrvar_1_confound_results[, 2:4 * 13 - 1]
-shr_5tier_1_confound <- ctrvar_1_confound_results[, 2:4 * 13 + 3]
-shr_cms_1_confound   <- ctrvar_1_confound_results[, 2:4 * 13 + 6]
-shr_mpsc_1_confound  <- ctrvar_1_confound_results[, 2:4 * 13 + 7]
+
+shr_exp_1_confound   <- ctrvar_1_confound_results[, 2:4 * 19 - 11]
+shr_bias_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 - 8]
+shr_mse_1_confound   <- ctrvar_1_confound_results[, 2:4 * 19 - 6]
+shr_shr_1_confound   <- ctrvar_1_confound_results[, 2:4 * 19 - 4]
+shr_5tier_1_confound <- ctrvar_1_confound_results[, 2:4 * 19 - 2]
+shr_HRt1_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 1]
+shr_HRt2_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 2]
+shr_HRt3_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 3]
+shr_HRt4_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 4]
+shr_HRt5_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 5]
+shr_cms_1_confound   <- ctrvar_1_confound_results[, 2:4 * 19 + 6]
+shr_mpsc_1_confound  <- ctrvar_1_confound_results[, 2:4 * 19 + 7]
+
 
 ```
 
@@ -413,7 +429,7 @@ par(mfrow = c(1,2))
 
 plot(shr_5tier_1[,1] ~ empirical_c_stats[,1],
      xlab = "C-statistic",
-     ylab = "Correlation",
+     ylab = "Kendall's tau",
      ylim = c(-1, 0),
      xlim = c(0.5, 1.0),
      type = "b",
@@ -440,7 +456,7 @@ lines(shr_5tier_1[,3] ~ empirical_c_stats[,1],
 
 plot(shr_5tier_1_confound[,1] ~ empirical_c_stats[,2],
      xlab = "C-statistic",
-     ylab = "Correlation",
+     ylab = "Kendall's tau",
      ylim = c(-1, 0),
      xlim = c(0.5, 1.0),
      type = "b",
@@ -511,6 +527,15 @@ lines(shr_cms_1[,3] ~ empirical_c_stats[,1],
       pch = 5,
       lty = 5,
       lwd = 2)
+legend("bottomright",
+       c("<3",
+         "3-<10",
+         expression("" >= "10")),
+       lty = c(1, 2, 5),
+       pch = c(6, 2, 5),
+       lwd = c(2, 2, 2),
+       bty = "n",
+       title = "Expected Events")
 
 
 
@@ -540,15 +565,6 @@ lines(shr_cms_1_confound[,3] ~ empirical_c_stats[,2],
       pch = 5,
       lty = 5,
       lwd = 2)
-legend("bottomleft",
-       c("<3",
-         "3-<10",
-         expression("" >= "10")),
-       lty = c(1, 2, 5),
-       pch = c(6, 2, 5),
-       lwd = c(2, 2, 2),
-       bty = "n",
-       title = "Expected Events")
 
 
 
@@ -607,7 +623,7 @@ lines(shr_mpsc_1_confound[,3] ~ empirical_c_stats[,2],
       pch = 5,
       lty = 5,
       lwd = 2)
-legend("bottomleft",
+legend("topleft",
        c("<3",
          "3-<10",
          expression("" >= "10")),

@@ -167,8 +167,7 @@ sim_c_effect_iter_fun <- function(curr_iter,
                           ctr = curr_data$observed_ctr,
                           true_HR = exp(curr_data$true_program_effect))
   
-  
-  
+
   ctr_summary <- pred_data %>%
     group_by(ctr) %>%
     summarise(ctr_obs = sum(observed),
@@ -183,8 +182,7 @@ sim_c_effect_iter_fun <- function(curr_iter,
                {ctr_obs / ctr_exp} > 1.85 & 
                {(1 - ppois(ctr_obs - 1, ctr_exp)) < 0.05}})
   
-  
-  
+
   ctr_summary$obs_5tier_score <- sapply(1:nrow(ctr_summary),
                                         function(x){ 
                                           integrate(
@@ -196,7 +194,7 @@ sim_c_effect_iter_fun <- function(curr_iter,
                                           })
   
   
-  
+  ### Calculating the observed 5 tier
   ctr_summary <- ctr_summary %>%
     mutate(obs_5tier = ifelse(obs_5tier_score < 0.125, 1,
                               ifelse({obs_5tier_score >= 0.125} & {obs_5tier_score < 0.375}, 2,
@@ -204,7 +202,7 @@ sim_c_effect_iter_fun <- function(curr_iter,
                                             ifelse({obs_5tier_score >= 0.625} & {obs_5tier_score < 0.875}, 4,
                                                    ifelse(obs_5tier_score >= 0.875, 5,
                                                           NA))))))
-  
+
   
   
   ctr_eval_0_3  <- ctr_summary$ctr[{ctr_summary$ctr_exp >= 0} & {ctr_summary$ctr_exp < 3}]
@@ -212,7 +210,9 @@ sim_c_effect_iter_fun <- function(curr_iter,
   ctr_eval_10_  <- ctr_summary$ctr[{ctr_summary$ctr_exp >= 10}]
   
   
+  
   op_char_mar <- c(mean(ctr_summary$ctr_exp),
+                   mean(ctr_summary$true_hr),
                    mean((ctr_summary$HR_unshr - ctr_summary$true_hr)),
                    mean((ctr_summary$HR_shr - ctr_summary$true_hr)),
                    mean((ctr_summary$HR_unshr - ctr_summary$true_hr) ^ 2),
@@ -223,15 +223,19 @@ sim_c_effect_iter_fun <- function(curr_iter,
                    cor(ctr_summary$obs_5tier, ctr_summary$true_hr, method = "kendall"),
                    cor(ctr_summary$obs_cms_flag, ctr_summary$true_hr, method = "kendall"),
                    cor(ctr_summary$obs_mpsc_flag, ctr_summary$true_hr, method = "kendall"),
-                   mean(outer(ctr_summary$true_hr[ctr_summary$obs_cms_flag == 1],
-                              ctr_summary$true_hr[ctr_summary$obs_cms_flag == 0],
-                              ">")),
-                   mean(outer(ctr_summary$true_hr[ctr_summary$obs_mpsc_flag == 1],
-                              ctr_summary$true_hr[ctr_summary$obs_mpsc_flag == 0],
-                              ">")))
+                   
+                   mean(ctr_summary$true_hr[ctr_summary$obs_5tier == 1]),
+                   mean(ctr_summary$true_hr[ctr_summary$obs_5tier == 2]),
+                   mean(ctr_summary$true_hr[ctr_summary$obs_5tier == 3]),
+                   mean(ctr_summary$true_hr[ctr_summary$obs_5tier == 4]),
+                   mean(ctr_summary$true_hr[ctr_summary$obs_5tier == 5]),
+                   
+                   mean(ctr_summary$true_hr[ctr_summary$obs_cms_flag == 1] > 1.25),
+                   mean(ctr_summary$true_hr[ctr_summary$obs_mpsc_flag == 1] > 1.25))
   
   
   op_char_0_3 <- c(mean(ctr_summary$ctr_exp[ctr_summary$ctr %in% ctr_eval_0_3]),
+                   mean(ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_0_3]),
                    mean((ctr_summary$HR_unshr[ctr_summary$ctr %in% ctr_eval_0_3] - 
                               ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_0_3])),
                    mean((ctr_summary$HR_shr[ctr_summary$ctr %in% ctr_eval_0_3] - 
@@ -252,15 +256,19 @@ sim_c_effect_iter_fun <- function(curr_iter,
                        ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_0_3], method = "kendall"),
                    cor(ctr_summary$obs_mpsc_flag[ctr_summary$ctr %in% ctr_eval_0_3], 
                        ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_0_3], method = "kendall"),
-                   mean(outer(ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 1} & {ctr_summary$ctr %in% ctr_eval_0_3}],
-                              ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 0} & {ctr_summary$ctr %in% ctr_eval_0_3}],
-                              ">")),
-                   mean(outer(ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 1} & {ctr_summary$ctr %in% ctr_eval_0_3}],
-                              ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 0} & {ctr_summary$ctr %in% ctr_eval_0_3}],
-                              ">")))
+                   
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 1} & {ctr_summary$ctr %in% ctr_eval_0_3}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 2} & {ctr_summary$ctr %in% ctr_eval_0_3}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 3} & {ctr_summary$ctr %in% ctr_eval_0_3}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 4} & {ctr_summary$ctr %in% ctr_eval_0_3}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 5} & {ctr_summary$ctr %in% ctr_eval_0_3}]),
+                   
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 1} & {ctr_summary$ctr %in% ctr_eval_0_3}] > 1.25),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 1} & {ctr_summary$ctr %in% ctr_eval_0_3}] > 1.25))
   
   
   op_char_3_10 <- c(mean(ctr_summary$ctr_exp[ctr_summary$ctr %in% ctr_eval_3_10]),
+                    mean(ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_3_10]),
                     mean((ctr_summary$HR_unshr[ctr_summary$ctr %in% ctr_eval_3_10] - 
                             ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_3_10])),
                     mean((ctr_summary$HR_shr[ctr_summary$ctr %in% ctr_eval_3_10] - 
@@ -281,15 +289,19 @@ sim_c_effect_iter_fun <- function(curr_iter,
                         ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_3_10], method = "kendall"),
                     cor(ctr_summary$obs_mpsc_flag[ctr_summary$ctr %in% ctr_eval_3_10], 
                         ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_3_10], method = "kendall"),
-                    mean(outer(ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 1} & {ctr_summary$ctr %in% ctr_eval_3_10}],
-                               ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 0} & {ctr_summary$ctr %in% ctr_eval_3_10}],
-                               ">")),
-                    mean(outer(ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 1} & {ctr_summary$ctr %in% ctr_eval_3_10}],
-                               ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 0} & {ctr_summary$ctr %in% ctr_eval_3_10}],
-                               ">")))
+                    
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 1} & {ctr_summary$ctr %in% ctr_eval_3_10}]),
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 2} & {ctr_summary$ctr %in% ctr_eval_3_10}]),
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 3} & {ctr_summary$ctr %in% ctr_eval_3_10}]),
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 4} & {ctr_summary$ctr %in% ctr_eval_3_10}]),
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 5} & {ctr_summary$ctr %in% ctr_eval_3_10}]),
+                    
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 1} & {ctr_summary$ctr %in% ctr_eval_3_10}] > 1.25),
+                    mean(ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 1} & {ctr_summary$ctr %in% ctr_eval_3_10}] > 1.25))
   
   
   op_char_10_ <- c(mean(ctr_summary$ctr_exp[ctr_summary$ctr %in% ctr_eval_10_]),
+                   mean(ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_10_]),
                    mean((ctr_summary$HR_unshr[ctr_summary$ctr %in% ctr_eval_10_] - 
                            ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_10_])),
                    mean((ctr_summary$HR_shr[ctr_summary$ctr %in% ctr_eval_10_] - 
@@ -310,12 +322,15 @@ sim_c_effect_iter_fun <- function(curr_iter,
                        ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_10_], method = "kendall"),
                    cor(ctr_summary$obs_mpsc_flag[ctr_summary$ctr %in% ctr_eval_10_], 
                        ctr_summary$true_hr[ctr_summary$ctr %in% ctr_eval_10_], method = "kendall"),
-                   mean(outer(ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 1} & {ctr_summary$ctr %in% ctr_eval_10_}],
-                              ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 0} & {ctr_summary$ctr %in% ctr_eval_10_}],
-                              ">")),
-                   mean(outer(ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 1} & {ctr_summary$ctr %in% ctr_eval_10_}],
-                              ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 0} & {ctr_summary$ctr %in% ctr_eval_10_}],
-                              ">")))
+                   
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 1} & {ctr_summary$ctr %in% ctr_eval_10_}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 2} & {ctr_summary$ctr %in% ctr_eval_10_}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 3} & {ctr_summary$ctr %in% ctr_eval_10_}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 4} & {ctr_summary$ctr %in% ctr_eval_10_}]),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_5tier == 5} & {ctr_summary$ctr %in% ctr_eval_10_}]),
+                   
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_cms_flag == 1} & {ctr_summary$ctr %in% ctr_eval_10_}] > 1.25),
+                   mean(ctr_summary$true_hr[{ctr_summary$obs_mpsc_flag == 1} & {ctr_summary$ctr %in% ctr_eval_10_}] > 1.25))
   
   
   
